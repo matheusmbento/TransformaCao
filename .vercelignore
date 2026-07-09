@@ -1,0 +1,7 @@
+.env
+banco.db
+scripts/
+*.bat
+*.ps1
+.vscode/
+.git/

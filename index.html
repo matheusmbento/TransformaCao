@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Espaço Pet TransformaCão — Sistema de Gestão</title>
+  <meta name="description" content="Sistema de gestão completo para o Espaço Pet TransformaCão: agenda, clientes, financeiro e mais." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link rel="apple-touch-icon" href="logo.png" />
+  <meta name="theme-color" content="#0a1a14" />
+</head>
+<body>
+  <div id="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon-wrap">
+          <img src="logo.png" alt="Logo" class="logo-img" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';" />
+          <span id="logo-fallback" class="logo-icon" style="display:none;">🐾</span>
+        </div>
+        <div class="logo-text">
+          <span class="logo-full-name"><span class="logo-transforma">Transforma</span><span class="logo-cao">Cão</span></span>
+          <small>Espaço Pet</small>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+          <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+        </button>
+        <button class="nav-item" data-page="agenda" onclick="navigate('agenda')">
+          <span class="nav-icon">📅</span><span class="nav-label">Agenda</span>
+        </button>
+        <button class="nav-item" data-page="clientes" onclick="navigate('clientes')">
+          <span class="nav-icon">🐶</span><span class="nav-label">Clientes</span>
+        </button>
+        <button class="nav-item" data-page="fila" onclick="navigate('fila')">
+          <span class="nav-icon">💬</span><span class="nav-label">Fila de Contatos</span>
+          <span class="nav-badge" id="fila-badge">0</span>
+        </button>
+        <button class="nav-item" data-page="servicos" onclick="navigate('servicos')">
+          <span class="nav-icon">✂️</span><span class="nav-label">Serviços</span>
+        </button>
+        <button class="nav-item" data-page="financeiro" onclick="navigate('financeiro')">
+          <span class="nav-icon">💰</span><span class="nav-label">Financeiro</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <!-- Widget de data -->
+        <div id="sidebar-date"></div>
+
+        <!-- Botões -->
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button
+            style="display:flex;align-items:center;gap:6px;flex:1;padding:7px 10px;border-radius:6px;font-size:11px;font-weight:500;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.13);color:#7A90A8;cursor:pointer;transition:all 0.15s;font-family:'Inter',sans-serif;"
+            onclick="openConfigModal()"
+            onmouseover="this.style.background='rgba(255,255,255,0.07)';this.style.color='#EEF2F7';"
+            onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='#7A90A8';"
+            title="Configurações e Backup"
+          >
+            <i class="ti ti-settings" style="font-size:14px;"></i>
+            Configurações
+          </button>
+
+          <div style="position:relative;flex-shrink:0;" id="power-btn-wrap">
+            <button
+              style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.13);color:#7A90A8;cursor:pointer;transition:all 0.15s;"
+              onclick="desligarSistema()"
+              aria-label="Encerrar sistema"
+              onmouseover="this.style.background='rgba(248,113,113,0.08)';this.style.borderColor='rgba(248,113,113,0.4)';this.style.color='#f87171';document.getElementById('power-tooltip').style.opacity='1';"
+              onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.borderColor='rgba(255,255,255,0.13)';this.style.color='#7A90A8';document.getElementById('power-tooltip').style.opacity='0';"
+            >
+              <i class="ti ti-power" style="font-size:15px;"></i>
+            </button>
+            <div id="power-tooltip" style="position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a2a3a;border:0.5px solid rgba(255,255,255,0.13);font-size:10px;color:#7A90A8;padding:3px 8px;border-radius:4px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.15s;">Encerrar</div>
+          </div>
+        </div>
+
+        <!-- Crédito -->
+        <div style="font-size:10px;color:var(--text-dim);opacity:0.5;letter-spacing:0.5px;text-align:center;">
+          Desenvolvido por Matheus Henrique
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <header class="topbar">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" onclick="openGlobalAdd()" id="global-add-btn">+ Novo</button>
+        </div>
+      </header>
+
+      <!-- PAGES -->
+      <div id="page-dashboard" class="page active"></div>
+      <div id="page-agenda" class="page"></div>
+      <div id="page-clientes" class="page"></div>
+      <div id="page-fila" class="page"></div>
+      <div id="page-servicos" class="page"></div>
+      <div id="page-financeiro" class="page"></div>
+    </main>
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <nav class="mobile-nav" id="mobile-nav">
+      <button class="mobile-nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+        <i class="ti ti-chart-pie"></i>
+        <span>Dash</span>
+      </button>
+      <button class="mobile-nav-item" data-page="agenda" onclick="navigate('agenda')">
+        <i class="ti ti-calendar-event"></i>
+        <span>Agenda</span>
+      </button>
+      <button class="mobile-nav-item" data-page="clientes" onclick="navigate('clientes')">
+        <i class="ti ti-dog"></i>
+        <span>Clientes</span>
+      </button>
+      <button class="mobile-nav-item" data-page="fila" onclick="navigate('fila')">
+        <i class="ti ti-messages"></i>
+        <span>Fila</span>
+        <span class="mobile-nav-badge" id="mobile-fila-badge" style="display: none;">0</span>
+      </button>
+      <button class="mobile-nav-item" data-page="financeiro" onclick="navigate('financeiro')">
+        <i class="ti ti-wallet"></i>
+        <span>Caixa</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MODALS -->
+  <div id="modal-overlay" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal" id="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="modal-title">Modal</h2>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast"></div>
+
+  <!-- CELEBRATION CONTAINER -->
+  <div id="celebration-container"></div>
+
+  <!-- SOM DE CELEBRAÇÃO (gerado via Web Audio API — sem arquivo externo) -->
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => {
+            console.log('ServiceWorker registrado com sucesso:', registration.scope);
+          })
+          .catch(error => {
+            console.log('Falha ao registrar o ServiceWorker:', error);
+          });
+      });
+    }
+  </script>
+</body>
+</html>

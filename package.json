@@ -1,0 +1,19 @@
+{
+  "name": "transformacao-pet-spa",
+  "version": "1.0.0",
+  "description": "Sistema de Gestão — Espaço Pet TransformaCão",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "archiver": "^8.0.0",
+    "axios": "^1.18.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "form-data": "^4.0.6",
+    "pg": "^8.22.0"
+  }
+}
