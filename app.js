@@ -1298,7 +1298,7 @@ function renderAgenda() {
                     ${a.status === 'concluido' ? `<button class="btn-avisar-pronto" onclick="avisarPronto('${a.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 21l1.65 -3.8a9 9 0 1 1 3.4 2.9l-5.05 .9"/><path d="M9 10a.5 .5 0 0 0 1 0v-1a.5 .5 0 0 0 -1 0v1a5 5 0 0 0 5 5h1a.5 .5 0 0 0 0 -1h-1a.5 .5 0 0 0 0 1"/></svg>Avisar Pronto</button>` : ''}
                     ${a.status !== 'concluido' ? `<button class="btn btn-primary btn-sm" style="background: var(--success); box-shadow: none;" onclick="concluirAgendamento('${a.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg> Concluir</button>` : ''}
                     ${a.status !== 'concluido' ? `<button class="btn-lixeira" title="Editar" onclick="editAgendamento('${a.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" /><path d="M13.5 6.5l4 4" /></svg></button>` : ''}
-                    <button class="btn-lixeira ${a.taxiDog ? 'btn-taxi-ativo' : ''}" title="Taxi Dog${a.taxiDog ? ' (R$ '+a.taxiDog.toFixed(2).replace('.',',')+' registrado)' : ''}" onclick="openTaxiDogModal('${a.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6a1 1 0 0 0 -1 -1h-1l-2.5 -4.5a1 1 0 0 0 -.86 -.5h-1.64"/><path d="M15 6l0 4.5"/></svg></button>
+                    <button class="btn-lixeira ${a.taxiDog ? 'btn-taxi-ativo' : ''}" title="Taxi Dog${a.taxiDog ? ' (R$ '+a.taxiDog.toFixed(2).replace('.',',')+' registrado)' : ''}" onclick="event.stopPropagation(); openTaxiDogModal('${a.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6a1 1 0 0 0 -1 -1h-1l-2.5 -4.5a1 1 0 0 0 -.86 -.5h-1.64"/><path d="M15 6l0 4.5"/></svg></button>
                     <button class="btn-lixeira" onclick="deleteAgendamento('${a.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg></button>
                   </div>
                 </div>
@@ -1922,10 +1922,10 @@ window.openTaxiDogModal = function(agendId) {
   `);
 
   // Foca no input automaticamente
-  setTimeout(() => {
-    const inp = document.getElementById('taxi-valor');
-    if (inp) { inp.focus(); inp.select(); }
-  }, 80);
+  // setTimeout(() => {
+  //   const inp = document.getElementById('taxi-valor');
+  //   if (inp) { inp.focus(); inp.select(); }
+  // }, 80);
 };
 
 window.confirmarTaxiDog = function(agendId) {
