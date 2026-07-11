@@ -12,6 +12,15 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+
+// Rota explícita para manifest.json — precisa vir ANTES do express.static
+// para evitar interceptação pelo SSO da Vercel (causa erro CORS no PWA)
+app.get('/manifest.json', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/manifest+json');
+  res.sendFile(path.join(__dirname, 'manifest.json'));
+});
+
 app.use(express.static(__dirname));
 
 // Connect to PostgreSQL (Neon)
