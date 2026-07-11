@@ -2001,9 +2001,9 @@ tbody tr:last-child { border-bottom: none; }
    Bloco B da Refatoração — 10/07/2026
    ============================================================ */
 
-/* ── Modal de Agendamento ──────────────────────────────────── */
-#modal-box .modal-header { display: none !important; }
-#modal-body { padding: 0 !important; }
+/* ── Modal Scoped Overrides ────────────────────────────────── */
+#modal-box:has(.ag-modal-header, .cd-header, .config-modal-header, .srv-modal-header) .modal-header { display: none !important; }
+#modal-box:has(.ag-modal-header, .cd-header, .config-modal-header, .srv-modal-header) #modal-body { padding: 0 !important; }
 
 .ag-modal-header {
   display: flex;
