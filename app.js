@@ -2001,7 +2001,7 @@ function renderClientes() {
     <div class="filter-bar">
       <button id="fc-todos" class="filter-chip ${clienteFilter==='todos'?'active':''}" onclick="clienteFilter='todos';updateCliFilters();renderClientesGrid()">Todos (${state.clientes.length})</button>
       <button id="fc-aniv" class="filter-chip ${clienteFilter==='aniversariantes'?'active':''}" onclick="clienteFilter='aniversariantes';updateCliFilters();renderClientesGrid()">🎂 Aniversariantes</button>
-      <button id="fc-ciclo" class="filter-chip ${clienteFilter==='ciclo'?'active':''}" onclick="clienteFilter='ciclo';updateCliFilters();renderClientesGrid()">🔁 Com Plano</button>
+      <button id="fc-ciclo" class="filter-chip ${clienteFilter==='ciclo'?'active':''}" onclick="clienteFilter='ciclo';updateCliFilters();renderClientesGrid()">🔁 Com Pacote</button>
     </div>
     <div id="cli-grid-wrapper"></div>
   `;
@@ -2181,7 +2181,7 @@ function renderClienteCard(c, insight) {
   } else {
     blocoC = `<div class="ci-info-block">
       <div class="ci-info-label"><i class="ti ti-package" style="font-size:11px"></i> Créditos</div>
-      <div class="ci-info-value" style="color:var(--text-dim);font-size:10px">Sem pacote</div>
+      <div class="ci-info-value" style="color:var(--text-dim);font-size:10px">Sem pacote pago</div>
       <div class="ci-info-sub"><span style="color:#0ABFA3;cursor:pointer;font-size:10px" onclick="event.stopPropagation();window.abrirVenderPacote('${c.id}')">+ Criar</span></div>
     </div>`;
   }
