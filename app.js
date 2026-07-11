@@ -3988,6 +3988,12 @@ window.enviarBackupTelegram = function() {
     showToast('Preencha o Token e o Chat ID para usar o Telegram.', 'error');
     return;
   }
+
+  // Auto-salva a config para não perder se esquecer de clicar em Salvar
+  if (!state.configuracoes) state.configuracoes = {};
+  state.configuracoes.telegramToken = token;
+  state.configuracoes.telegramChatId = chatId;
+  saveDB();
   
   showToast('Enviando backup para o Telegram...', 'info');
 
