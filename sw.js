@@ -1,4 +1,4 @@
-const CACHE_NAME = 'transformacao-v1';
+const CACHE_NAME = 'transformacao-v2';
 const urlsToCache = [
   '/',
   '/index.html',
