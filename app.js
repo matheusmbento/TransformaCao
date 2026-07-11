@@ -2934,16 +2934,29 @@ window.confirmarPacote = function(id) {
     categoria: 'pacote'
   });
   
-  try {
-    fetch('/api/v2/financeiro', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        id: finId, data_lancamento: today(), valor: valor, tipo: 'receita', 
-        descricao: `${nome} — 🐾 ${c.pet?.nome} (${c.nome})`, 
-        metadata: { categoria: 'pacote' }
-      })
-    });
-  } catch(e) {}
+  // DUAL WRITE: financeiro V2
+  fetch('/api/v2/financeiro', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      id: finId, data_lancamento: today(), valor: valor, tipo: 'receita',
+      descricao: `${nome} — 🐾 ${c.pet?.nome} (${c.nome})`,
+      metadata: { categoria: 'pacote' }
+    })
+  }).catch(e => console.error('Dual Write financeiro (pacote):', e));
+
+  // DUAL WRITE: cliente V2 — atualiza metadata com dados do novo pacote
+  fetch(`/api/v2/clientes/${c.id}`, {
+    method: 'PUT', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      nome: c.nome, telefone: c.telefone, observacoes: c.obs || '',
+      metadata: {
+        ...(c.metadata || {}),
+        pacote: c.pacote,
+        ciclo: c.ciclo,
+        ultimoAtendimento: c.ultimoAtendimento
+      }
+    })
+  }).catch(e => console.error('Dual Write cliente (pacote):', e));
 
   saveDB();
   showToast(`Pacote "${nome}" criado com sucesso! 🎉`, 'success');
