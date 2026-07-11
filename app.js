@@ -1865,7 +1865,8 @@ window.confirmarTaxiDog = function(agendId) {
     desc: `Taxi Dog — 🚗 ${petNome} (${tutorNome})`,
     valor: valor,
     data: a.data,
-    categoria: 'taxi_dog'
+    categoria: 'taxi_dog',
+    agendamento_id: agendId
   });
 
   // DUAL WRITE: Salvar o financeiro na API V2 e atualizar o agendamento
@@ -1875,6 +1876,7 @@ window.confirmarTaxiDog = function(agendId) {
       body: JSON.stringify({
         id: finId, data_lancamento: a.data, valor: valor, tipo: 'receita', 
         descricao: `Taxi Dog — 🚗 ${petNome} (${tutorNome})`, 
+        agendamento_id: agendId,
         metadata: { categoria: 'taxi_dog' }
       })
     });
