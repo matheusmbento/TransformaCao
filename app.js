@@ -1675,9 +1675,9 @@ window.concluirAgendamento = function(id) {
           ${c.pet?.nome} possui <strong style="color:var(--success)">${restante} crédito${restante > 1 ? 's' : ''} de ${srv?.nome}</strong> no pacote <em>${c.pacote.nome || ''}</em>.<br>
           Deseja usar 1 crédito (sem lançar no caixa) ou cobrar o valor avulso?
         </div>
-        <div style="display:flex;gap:10px;justify-content:flex-end">
-          <button class="btn btn-ghost" onclick="efetivarConclusao('${id}', false)">Cobrar Avulso ${srv ? '('+fmtMoney(srv.preco)+')' : ''}</button>
-          <button class="btn btn-magenta" onclick="efetivarConclusao('${id}', true)">🎁 Usar 1 Crédito de ${srv?.nome}</button>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
+          <button class="btn btn-magenta" onclick="efetivarConclusao('${id}', true)" style="width:100%; white-space:normal; height:auto; padding:12px;">🎁 Usar 1 Crédito de ${srv?.nome}</button>
+          <button class="btn btn-ghost" onclick="efetivarConclusao('${id}', false)" style="width:100%; white-space:normal; height:auto; padding:12px;">Cobrar Avulso ${srv ? '('+fmtMoney(srv.preco)+')' : ''}</button>
         </div>
       `);
       return;
