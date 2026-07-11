@@ -1777,45 +1777,58 @@ window.openTaxiDogModal = function(agendId) {
   const c = state.clientes.find(cl => cl.id === a.clienteId);
   const petNome = c?.pet?.nome || 'Pet';
   const tutorNome = c?.nome || 'Cliente';
-  const valorAtual = a.taxiDog ? a.taxiDog.toFixed(2).replace('.', ',') : '';
+  
+  let valorStr = '';
+  if (a.taxiDog !== undefined && a.taxiDog !== null && a.taxiDog !== 0) {
+    valorStr = Number(a.taxiDog).toFixed(2).replace('.', ',');
+  }
 
-  openModal('🚗 Taxi Dog', `
-    <div id="taxi-dog-modal-wrap">
-      <div class="taxi-info">
-        <div class="taxi-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E040A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-            <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
-            <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
-            <path d="M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6a1 1 0 0 0 -1 -1h-1l-2.5 -4.5a1 1 0 0 0 -.86 -.5h-1.64"/>
-            <path d="M15 6l0 4.5"/>
-          </svg>
+  const histHTML = a.taxiDog ? `
+    <div class="td-historico">
+      ✅ Já possui taxi registrado: <strong style="color:#E040A0">${fmtMoney(a.taxiDog)}</strong> &nbsp;— adicionar novo substituirá o atual.
+    </div>
+  ` : '';
+
+  const html = `
+    <div class="td-wrapper">
+      <div class="td-header">
+        <div class="td-header-left">
+          <div class="td-icon-square">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+              <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
+              <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
+              <path d="M5 17h-2v-11a1 1 0 0 1 1 -1h9v12m-4 0h6m4 0h2v-6a1 1 0 0 0 -1 -1h-1l-2.5 -4.5a1 1 0 0 0 -.86 -.5h-1.64"/>
+              <path d="M15 6l0 4.5"/>
+            </svg>
+          </div>
+          <div>
+            <div class="td-header-title">Taxi Dog: ${petNome}</div>
+            <div class="td-header-subtitle">Tutor: ${tutorNome} &nbsp;·&nbsp; ${fmt(a.data)} ${a.hora ? a.hora : ''}</div>
+          </div>
         </div>
+        <button class="td-close-btn" onclick="closeModal()">×</button>
+      </div>
+      
+      <div class="td-content">
+        ${histHTML}
         <div>
-          <div class="taxi-pet">${petNome}</div>
-          <div class="taxi-tutor">Tutor: ${tutorNome} &nbsp;·&nbsp; ${fmt(a.data)} ${a.hora ? '· ' + a.hora : ''}</div>
+          <label class="td-label">Valor do Adicional (R$)</label>
+          <div class="td-input-wrap">
+            <span class="td-prefix">R$</span>
+            <input id="taxi-valor" class="td-input" type="number" min="0" step="0.50" placeholder="0,00" value="${valorStr}" />
+          </div>
         </div>
       </div>
-      ${a.taxiDog ? `<div class="taxi-historico">✅ Já possui taxi registrado: <strong style="color:var(--magenta)">${fmtMoney(a.taxiDog)}</strong> &nbsp;— adicionar outro lançamento abaixo.</div>` : ''}
-      <div>
-        <div class="taxi-label" style="margin-bottom:6px;">Valor do Taxi Dog</div>
-        <div class="taxi-valor-wrap">
-          <span class="taxi-prefix">R$</span>
-          <input id="taxi-valor" type="number" min="0" step="0.50" placeholder="0,00" value="${valorAtual}" />
-        </div>
-      </div>
-      <div class="taxi-actions">
-        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('modal-overlay').classList.remove('open')">Cancelar</button>
-        <button class="btn btn-magenta btn-sm" onclick="confirmarTaxiDog('${agendId}')">🚗 Confirmar Taxi Dog</button>
+      
+      <div class="td-footer">
+        <button class="td-btn td-btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="td-btn td-btn-save" onclick="confirmarTaxiDog('${agendId}')">Salvar Valor</button>
       </div>
     </div>
-  `);
-
-  // Foca no input automaticamente
-  // setTimeout(() => {
-  //   const inp = document.getElementById('taxi-valor');
-  //   if (inp) { inp.focus(); inp.select(); }
-  // }, 80);
+  `;
+  
+  openModal('', html);
 };
 
 window.confirmarTaxiDog = function(agendId) {

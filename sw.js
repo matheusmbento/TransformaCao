@@ -1,19 +1,34 @@
-const CACHE_NAME = 'transformacao-v3';
+const CACHE_NAME = 'transformacao-v4';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=2',
-  '/app.js?v=2',
+  '/style.css?v=3',
+  '/app.js?v=3',
   '/logo.png',
   '/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
+  self.skipWaiting(); // Força a atualização imediata no celular
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        return cache.addAll(urlsToCache);
-      })
+      .then(cache => cache.addAll(urlsToCache))
+      .catch(err => console.warn('Falha no cache inicial', err))
+  );
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('Apagando cache antigo:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => self.clients.claim()) // Assume o controle das abas abertas imediatamente
   );
 });
 
