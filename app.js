@@ -2422,7 +2422,7 @@ window.salvarCliente = async function(editId) {
     if (res.ok) {
       showToast(`Cliente ${editId ? 'atualizado' : 'cadastrado'}! ✅`, 'success');
       // Recarrega os dados completos da API para atualizar a interface imediatamente sem saveDB
-      await loadDB(); 
+      state = await loadDB();
       document.getElementById('modal-overlay').classList.remove('open');
       renderPage(currentPage);
       updateFilaBadge();

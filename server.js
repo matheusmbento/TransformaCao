@@ -176,7 +176,7 @@ app.get('/api/v2/clientes', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT c.*, 
-        json_agg(json_build_object('id', p.id, 'nome', p.nome, 'raca', p.raca, 'porte', p.porte)) as pets
+        json_agg(json_build_object('id', p.id, 'nome', p.nome, 'raca', p.raca, 'porte', p.porte, 'metadata', p.metadata)) as pets
       FROM clientes c
       LEFT JOIN pets p ON c.id = p.cliente_id AND p.deleted_at IS NULL
       WHERE c.deleted_at IS NULL
