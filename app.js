@@ -1718,7 +1718,8 @@ window.efetivarConclusao = async function(id, usarCredito) {
           desc: `${srv.nome} — 🐾 ${c.pet?.nome} (${c.nome})`,
           valor: srv.preco,
           data: a.data,
-          categoria: 'servico'
+          categoria: 'servico',
+          agendamento_id: a.id
         });
         try {
           fetch('/api/v2/financeiro', {
