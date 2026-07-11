@@ -109,7 +109,9 @@ app.get('/api/backup/download', async (req, res) => {
 
 // Rota para enviar o arquivo JSON para o Telegram
 app.post('/api/backup/telegram', async (req, res) => {
-  const { botToken, chatId } = req.body;
+  let { botToken, chatId } = req.body;
+  botToken = (botToken || '').trim();
+  chatId = (chatId || '').trim();
   if (!botToken || !chatId) return res.status(400).json({ error: 'Bot Token e Chat ID são obrigatórios.' });
 
   try {
@@ -120,7 +122,7 @@ app.post('/api/backup/telegram', async (req, res) => {
     form.append('chat_id', chatId);
     const dateStr = new Date().toISOString().split('T')[0].split('-').reverse().join('/');
     form.append('caption', `📦 *Backup TransformaCão (Nuvem)* - ${dateStr}\nAqui está o seu backup em formato JSON.`);
-    form.append('parse_mode', 'Markdown');
+    // form.append('parse_mode', 'Markdown'); // Removido para evitar erros de sintaxe 400
     
     // Anexa como Buffer
     form.append('document', Buffer.from(data, 'utf-8'), {
@@ -135,7 +137,8 @@ app.post('/api/backup/telegram', async (req, res) => {
     else res.status(500).json({ error: 'Erro Telegram', details: response.data });
   } catch (error) {
     console.error('Erro ao enviar backup Telegram:', error);
-    res.status(500).json({ error: 'Falha ao enviar backup.', details: error.message });
+    const details = error.response ? error.response.data : error.message;
+    res.status(500).json({ error: 'Falha ao enviar backup.', details });
   }
 });
 
