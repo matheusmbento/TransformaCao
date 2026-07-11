@@ -1,4 +1,4 @@
-const CACHE_NAME = 'transformacao-v4';
+const CACHE_NAME = 'transformacao-v5';
 const urlsToCache = [
   '/',
   '/index.html',
