@@ -357,6 +357,12 @@ function isPetBirthday(bday) {
   return parseInt(m) === now.getMonth() + 1 && parseInt(d) === now.getDate();
 }
 
+function isPetBirthdayMonth(bday) {
+  if (!bday) return false;
+  const [,m] = bday.split('-');
+  return parseInt(m) === new Date().getMonth() + 1;
+}
+
 function daysUntilBirthday(bday) {
   if (!bday) return null;
   const now = new Date();
@@ -2030,8 +2036,8 @@ window.renderClientesGrid = function() {
       c.nome.toLowerCase().includes(clienteSearch.toLowerCase()) ||
       (c.pet?.nome||'').toLowerCase().includes(clienteSearch.toLowerCase());
     const matchFilter = clienteFilter === 'todos' ||
-      (clienteFilter === 'aniversariantes' && isPetBirthday(c.pet?.aniversario)) ||
-      (clienteFilter === 'ciclo' && c.ciclo);
+      (clienteFilter === 'aniversariantes' && isPetBirthdayMonth(c.pet?.aniversario)) ||
+      (clienteFilter === 'ciclo' && c.pacote && c.pacote.servicos && c.pacote.servicos.length > 0);
     return matchSearch && matchFilter;
   });
 
@@ -2883,7 +2889,7 @@ function renderFila() {
   }).sort((a,b) => b.data.localeCompare(a.data));
 
   // ── Qualificar: sem ciclo ──────────────────────────────────────
-  const semCiclo = state.clientes.filter(c => !c.ciclo);
+  const semCiclo = state.clientes.filter(c => !c.pacote || !c.pacote.servicos || c.pacote.servicos.length === 0);
 
   const tabs = [
     { id: 'atrasado', label: 'Em Atraso',  count: atrasados.length,       stripe: '#f87171' },
@@ -3003,26 +3009,26 @@ function renderFilaContent(filter, atrasados, confirmarAgends, posvendaAgends, s
 
   // ── ABA 4: QUALIFICAR ─────────────────────────────────────────
   if (filter === 'qualificar') {
-    if (semCiclo.length === 0) return emptyState('Todos os clientes têm ciclo definido!', 'Novos clientes sem frequência aparecerão aqui.');
+    if (semCiclo.length === 0) return emptyState('Todos os clientes possuem pacote!', 'Novos clientes sem pacote pago aparecerão aqui.');
     return `
       <div style="margin-bottom:16px;">
-        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;">Novos clientes sem ciclo definido</div>
-        <div style="font-size:12px;color:var(--text-muted);">Entre em contato para entender a frequência ideal.</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;">Clientes sem pacote ativo</div>
+        <div style="font-size:12px;color:var(--text-muted);">Oportunidade de venda: ofereça um pacote de banhos com desconto!</div>
       </div>
       ${semCiclo.map(c => {
         const av = renderFilaAvatar(c.nome);
         const petNome = c.pet?.nome || 'Pet';
         const nomePrimeiro = c.nome.split(' ')[0];
-        const msg = `Oi, ${nomePrimeiro}! Tudo bem? Foi um prazer ter o(a) ${petNome} aqui! Estamos montando a agenda dos nossos clientes e gostaríamos de entender melhor a frequência ideal para os atendimentos. Costuma trazer a cada quantas semanas? Assim já deixamos reservado para vocês!`;
+        const msg = `Oi, ${nomePrimeiro}! Tudo bem? Foi um prazer ter o(a) ${petNome} aqui! Temos pacotes de banhos com condições especiais para clientes frequentes! Quer saber mais? Posso te explicar como funciona e já reservar um horário para o(a) ${petNome}!`;
         const url = c.telefone ? `https://wa.me/55${c.telefone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}` : null;
         return `
           <div style="background:var(--card);border:0.5px solid rgba(224,64,160,0.15);border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
             ${av}
             <div style="flex:1;min-width:0;">
               <div style="font-size:13px;font-weight:600;color:var(--text);">${c.nome} <span style="color:var(--text-muted);font-weight:400;">— ${petNome}</span></div>
-              <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Sem frequência definida · ${c.pet?.raca || c.pet?.tipo || 'Pet'}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Sem pacote pago · ${c.pet?.raca || c.pet?.tipo || 'Pet'}</div>
             </div>
-            <button onclick="openClienteModal('${c.id}')" style="background:transparent;border:0.5px solid rgba(255,255,255,0.12);color:var(--text-muted);padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;">Definir Ciclo</button>
+            <button onclick="abrirVenderPacote('${c.id}')" style="background:transparent;border:0.5px solid rgba(255,255,255,0.12);color:var(--text-muted);padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;">Criar Pacote</button>
             ${url ? `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;background:rgba(224,64,160,0.1);border:0.5px solid rgba(224,64,160,0.28);color:#E040A0;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;"><i class="ti ti-brand-whatsapp"></i>Qualificar</a>` : '<span style="font-size:11px;color:var(--text-muted);">Sem telefone</span>'}
           </div>`;
       }).join('')}`;
