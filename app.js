@@ -202,8 +202,7 @@ async function saveDB() {
     await fetch('/api/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(state),
-      keepalive: true
+      body: JSON.stringify(state)
     });
   } catch (e) {
     console.error('Erro ao salvar no SQLite:', e);
