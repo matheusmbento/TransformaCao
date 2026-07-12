@@ -709,21 +709,21 @@ function renderDashboard() {
           let msgAtrasado = state.configuracoes?.mensagens?.atrasado || '';
           msgAtrasado = msgAtrasado.replace('{{nome}}', r.cliente.nome).replace('{{pet}}', r.cliente.pet?.nome || 'pet');
           const waUrl = 'https://wa.me/55' + r.cliente.telefone.replace(/\\D/g, '') + '?text=' + encodeURIComponent(msgAtrasado);
-          return \`
+          return `
             <div class="retention-item">
               <div class="rt-info">
-                <span class="rt-pet">\${r.cliente.pet?.nome || 'Sem pet'} (Tutor: \${r.cliente.nome})</span>
-                <span class="rt-days">Há \${r.dias} dias sumido</span>
+                <span class="rt-pet">${r.cliente.pet?.nome || 'Sem pet'} (Tutor: ${r.cliente.nome})</span>
+                <span class="rt-days">Há ${r.dias} dias sumido</span>
               </div>
-              <a href="\${waUrl}" target="_blank" class="rt-btn"><i class="ti ti-brand-whatsapp"></i> Chamar</a>
+              <a href="${waUrl}" target="_blank" class="rt-btn"><i class="ti ti-brand-whatsapp"></i> Chamar</a>
             </div>
-          \`;
+          `;
         }).join('')}
       </div>
     </div>
   ` : '';
 
-  page.innerHTML = \`
+  page.innerHTML = `
     <!-- ── KPIs ── -->
     <div class="grid grid-4 mb-3">
       <div class="kpi-card" style="--kpi-color:#0ABFA3">
