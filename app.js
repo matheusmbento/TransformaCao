@@ -794,31 +794,27 @@ function renderDashboard() {
     </div>
 
     <!-- ── Faixa Hoje ── -->
-    <div style="background:rgba(255,255,255,0.02);border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:24px;margin-bottom:12px;">
-      <div style="display:flex;align-items:center;gap:8px;">
+    <div style="background:rgba(255,255,255,0.02);border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 16px;display:flex;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:8px;min-width:60px;">
         <i class="ti ti-sun" style="font-size:14px;color:#FBBF24;"></i>
         <span style="font-size:11px;font-weight:500;color:#FBBF24;">Hoje</span>
       </div>
-      <div style="width:0.5px;height:24px;background:rgba(255,255,255,0.1);"></div>
       <div>
         <div style="font-size:14px;font-weight:500;color:#0ABFA3;">${fmtMoney(faturadoHoje)}</div>
-        <div style="font-size:10px;color:var(--text-muted);">faturado hoje</div>
+        <div style="font-size:10px;color:var(--text-muted);">faturado</div>
       </div>
-      <div style="width:0.5px;height:24px;background:rgba(255,255,255,0.1);"></div>
       <div>
         <div style="font-size:14px;font-weight:500;color:#fff;">${atendimentosHoje}</div>
         <div style="font-size:10px;color:var(--text-muted);">atendimentos</div>
       </div>
-      <div style="width:0.5px;height:24px;background:rgba(255,255,255,0.1);"></div>
       <div>
         <div style="font-size:14px;font-weight:500;color:#60A5FA;">${fmtMoney(ticketMedioHoje)}</div>
         <div style="font-size:10px;color:var(--text-muted);">tkt. médio</div>
       </div>
-      <div style="width:0.5px;height:24px;background:rgba(255,255,255,0.1);"></div>
       <div>
-        <div style="font-size:12px;color:var(--text-muted);">${nextLivre ? `próximo livre: ${nextLivre}` : 'agenda cheia hoje'}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${nextLivre ? `prox: ${nextLivre}` : 'agenda cheia'}</div>
       </div>
-      <div style="margin-left:auto;">
+      <div style="flex-grow:1;text-align:right;">
         <span onclick="navigate('agenda')" style="font-size:11px;color:#0ABFA3;cursor:pointer;font-weight:600;">Ver agenda →</span>
       </div>
     </div>
