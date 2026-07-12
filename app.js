@@ -616,6 +616,11 @@ function renderDashboard() {
         break;
       }
     }
+    
+    // Se não achou horário livre, verifica se o motivo é porque o dia já acabou
+    if (!nextLivre && tNow + 35 > 18 * 60) {
+      nextLivre = 'encerrado';
+    }
   }
 
   // ── Taxa de Retorno ──────────────────────────────────────────────
@@ -812,7 +817,7 @@ function renderDashboard() {
         <div style="font-size:10px;color:var(--text-muted);">tkt. médio</div>
       </div>
       <div>
-        <div style="font-size:12px;color:var(--text-muted);">${nextLivre ? `prox: ${nextLivre}` : 'agenda cheia'}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${nextLivre === 'encerrado' ? 'encerrado' : nextLivre ? `prox: ${nextLivre}` : 'agenda cheia'}</div>
       </div>
       <div style="flex-grow:1;text-align:right;">
         <span onclick="navigate('agenda')" style="font-size:11px;color:#0ABFA3;cursor:pointer;font-weight:600;">Ver agenda →</span>
