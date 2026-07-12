@@ -2317,3 +2317,27 @@ tbody tr:last-child { border-bottom: none; }
 .td-btn-cancel:hover { background: rgba(255,255,255,0.08); color: var(--text); }
 .td-btn-save { background: rgba(224,64,160,0.12); border: 0.5px solid rgba(224,64,160,0.3); color: #E040A0; }
 .td-btn-save:hover { background: rgba(224,64,160,0.2); }
+
+/* --- GLOBAL SEARCH --- */
+.global-search-container { position: relative; width: 250px; display: none; }
+@media (min-width: 768px) { .global-search-container { display: block; } }
+#global-search-input { width: 100%; background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px 8px 32px; color: var(--text); font-size: 13px; font-family: 'Inter', sans-serif; transition: 0.2s; }
+#global-search-input:focus { background: rgba(255,255,255,0.07); border-color: var(--primary-light); outline: none; }
+.global-search-results { position: absolute; top: calc(100% + 5px); left: 0; width: 100%; background: #13222e; border: 0.5px solid rgba(255,255,255,0.15); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); max-height: 300px; overflow-y: auto; z-index: 100; display: none; }
+.global-search-results.active { display: block; }
+.search-result-item { padding: 10px 12px; border-bottom: 0.5px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 3px; }
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: rgba(255,255,255,0.05); }
+.sr-pet { font-size: 13px; font-weight: 600; color: var(--text); }
+.sr-tutor { font-size: 11px; color: var(--text-muted); }
+
+/* --- RETENTION RADAR --- */
+.retention-radar-card { background: linear-gradient(135deg, rgba(248,113,113,0.1), rgba(20,32,46,0.6)); border: 1px solid rgba(248,113,113,0.3); border-radius: 12px; padding: 15px; margin-bottom: 20px; }
+.retention-radar-header { display: flex; align-items: center; gap: 8px; color: #f87171; font-weight: 700; font-family: 'Nunito', sans-serif; font-size: 14px; margin-bottom: 12px; }
+.retention-list { display: flex; flex-direction: column; gap: 8px; }
+.retention-item { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; border: 0.5px solid rgba(255,255,255,0.05); }
+.rt-info { display: flex; flex-direction: column; }
+.rt-pet { font-size: 13px; font-weight: 700; color: var(--text); }
+.rt-days { font-size: 11px; color: #f87171; font-weight: 600; }
+.rt-btn { display: inline-flex; align-items: center; gap: 5px; background: rgba(34,197,94,0.15); color: #4ade80; border: 0.5px solid rgba(34,197,94,0.3); padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; text-decoration: none; transition: 0.2s; cursor: pointer; }
+.rt-btn:hover { background: rgba(34,197,94,0.25); }

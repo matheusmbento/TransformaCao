@@ -97,7 +97,12 @@
       <header class="topbar">
         <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
         <div class="topbar-title" id="topbar-title">Dashboard</div>
-        <div class="topbar-actions">
+        <div class="topbar-actions" style="display: flex; gap: 12px; align-items: center;">
+          <div class="global-search-container" style="position: relative;">
+            <i class="ti ti-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-dim);"></i>
+            <input type="text" id="global-search-input" placeholder="Buscar pet, tutor ou telefone..." oninput="handleGlobalSearch(event)" autocomplete="off" />
+            <div id="global-search-results" class="global-search-results"></div>
+          </div>
           <button class="btn btn-primary" onclick="openGlobalAdd()" id="global-add-btn">+ Novo</button>
         </div>
       </header>

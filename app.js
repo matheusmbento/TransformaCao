@@ -670,7 +670,60 @@ function renderDashboard() {
   const clientesAtivosPrev = ativosAnt.size;
   const totalClientesVal = state.clientes.length;
 
-  page.innerHTML = `
+  // ── Radar de Retenção (>30 dias e sem futuro) ──
+  const limitDays = 30;
+  const retentionList = state.clientes.map(c => {
+    const agends = state.agendamentos.filter(a => a.clienteId === c.id);
+    if (agends.length === 0) return null;
+    
+    // Check se tem algo no futuro
+    const hasFuture = agends.some(a => {
+      if (a.status !== 'agendado') return false;
+      const d = new Date(a.data);
+      d.setHours(23, 59, 59, 999);
+      return d >= now;
+    });
+    if (hasFuture) return null;
+
+    // Achar o mais recente concluído
+    const concluidos = agends.filter(a => a.status === 'concluido').sort((a,b) => new Date(b.data) - new Date(a.data));
+    if (concluidos.length === 0) return null;
+    
+    const ult = new Date(concluidos[0].data);
+    const diffTime = Math.abs(now - ult);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays >= limitDays) {
+      return { cliente: c, dias: diffDays, ultimo: concluidos[0] };
+    }
+    return null;
+  }).filter(Boolean).sort((a,b) => b.dias - a.dias);
+
+  const retentionHtml = retentionList.length > 0 ? `
+    <div class="retention-radar-card">
+      <div class="retention-radar-header">
+        <i class="ti ti-radar"></i> Radar de Retenção (Atrasados > 30 dias)
+      </div>
+      <div class="retention-list">
+        ${retentionList.slice(0, 5).map(r => {
+          let msgAtrasado = state.configuracoes?.mensagens?.atrasado || '';
+          msgAtrasado = msgAtrasado.replace('{{nome}}', r.cliente.nome).replace('{{pet}}', r.cliente.pet?.nome || 'pet');
+          const waUrl = 'https://wa.me/55' + r.cliente.telefone.replace(/\\D/g, '') + '?text=' + encodeURIComponent(msgAtrasado);
+          return \`
+            <div class="retention-item">
+              <div class="rt-info">
+                <span class="rt-pet">\${r.cliente.pet?.nome || 'Sem pet'} (Tutor: \${r.cliente.nome})</span>
+                <span class="rt-days">Há \${r.dias} dias sumido</span>
+              </div>
+              <a href="\${waUrl}" target="_blank" class="rt-btn"><i class="ti ti-brand-whatsapp"></i> Chamar</a>
+            </div>
+          \`;
+        }).join('')}
+      </div>
+    </div>
+  ` : '';
+
+  page.innerHTML = \`
     <!-- ── KPIs ── -->
     <div class="grid grid-4 mb-3">
       <div class="kpi-card" style="--kpi-color:#0ABFA3">
@@ -772,6 +825,7 @@ function renderDashboard() {
 
 
     <!-- ── Alertas ── -->
+    ${retentionHtml}
     ${aniversariantes.length ? `
     <div class="card mb-3" style="border-color:rgba(224,64,160,0.35);background:rgba(224,64,160,0.05);">
       <div class="section-header" style="margin-bottom:12px;">
@@ -4417,3 +4471,47 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// ── EXPERIÊNCIA DO OPERADOR: Busca Global ──
+window.handleGlobalSearch = function(event) {
+  const query = event.target.value.toLowerCase().trim();
+  const resultsContainer = document.getElementById('global-search-results');
+  
+  if (!query || query.length < 2) {
+    resultsContainer.classList.remove('active');
+    return;
+  }
+
+  const results = state.clientes.filter(c => {
+    const nomePet = (c.pet?.nome || '').toLowerCase();
+    const nomeTutor = (c.nome || '').toLowerCase();
+    const telefone = (c.telefone || '');
+    return nomePet.includes(query) || nomeTutor.includes(query) || telefone.includes(query);
+  }).slice(0, 5); // Limita a 5 resultados
+
+  if (results.length === 0) {
+    resultsContainer.innerHTML = `<div class="search-result-item"><span class="sr-tutor">Nenhum resultado</span></div>`;
+  } else {
+    resultsContainer.innerHTML = results.map(c => `
+      <div class="search-result-item" onclick="openClienteFromSearch('${c.id}')">
+        <span class="sr-pet">🐾 ${c.pet?.nome || 'Sem pet'}</span>
+        <span class="sr-tutor">👤 ${c.nome} ${c.telefone ? '• '+c.telefone : ''}</span>
+      </div>
+    `).join('');
+  }
+  resultsContainer.classList.add('active');
+};
+
+window.openClienteFromSearch = function(id) {
+  document.getElementById('global-search-input').value = '';
+  document.getElementById('global-search-results').classList.remove('active');
+  openClienteDetalhe(id);
+};
+
+// Esconder busca ao clicar fora
+document.addEventListener('click', (e) => {
+  const container = document.querySelector('.global-search-container');
+  if (container && !container.contains(e.target)) {
+    document.getElementById('global-search-results')?.classList.remove('active');
+  }
+});
