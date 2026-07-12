@@ -708,7 +708,7 @@ function renderDashboard() {
         ${retentionList.slice(0, 5).map(r => {
           let msgAtrasado = state.configuracoes?.mensagens?.atrasado || '';
           msgAtrasado = msgAtrasado.replace('{{nome}}', r.cliente.nome).replace('{{pet}}', r.cliente.pet?.nome || 'pet');
-          const waUrl = 'https://wa.me/55' + r.cliente.telefone.replace(/\\D/g, '') + '?text=' + encodeURIComponent(msgAtrasado);
+          const waUrl = 'https://wa.me/55' + r.cliente.telefone.replace(/\D/g, '') + '?text=' + encodeURIComponent(msgAtrasado);
           return `
             <div class="retention-item">
               <div class="rt-info">
