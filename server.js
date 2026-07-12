@@ -47,41 +47,45 @@ async function initDatabase() {
         value TEXT
       )
     `);
-    console.log('✅ Tabela transformacao_state verificada/criada no Neon.');
+    // Tabela de configurações V2 (Telegram, mensagens WhatsApp, recordes de gamificação)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS config_v2 (
+        key VARCHAR(255) PRIMARY KEY,
+        value JSONB NOT NULL DEFAULT '{}'
+      )
+    `);
+    console.log('✅ Tabelas verificadas/criadas no Neon.');
   } catch (err) {
     console.error('❌ Erro ao criar tabela no Postgres:', err.message);
   }
 }
 initDatabase();
 
-// Route to get the complete database state
-app.get('/api/db', async (req, res) => {
+// ── API V2: Config (Telegram, Mensagens, Recordes) ───────────────
+app.get('/api/v2/config', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
   try {
-    const result = await pool.query("SELECT value FROM transformacao_state WHERE key = 'state'");
-    if (result.rows.length === 0) {
-      return res.json(null); // No data saved yet
-    }
-    res.json(JSON.parse(result.rows[0].value));
+    const result = await pool.query("SELECT key, value FROM config_v2");
+    const config = {};
+    result.rows.forEach(r => { config[r.key] = r.value; });
+    res.json(config);
   } catch (err) {
-    console.error('Erro ao carregar do Neon:', err);
-    res.status(500).json({ error: 'Erro ao processar dados salvos no banco' });
+    console.error('Erro ao carregar config v2:', err);
+    res.status(500).json({ error: 'Erro ao carregar configurações' });
   }
 });
 
-// Route to save the complete database state
-app.post('/api/save', async (req, res) => {
-  const stateString = JSON.stringify(req.body);
+app.put('/api/v2/config', async (req, res) => {
+  const { key, value } = req.body;
+  if (!key) return res.status(400).json({ error: 'Key é obrigatório' });
   try {
     await pool.query(
-      "INSERT INTO transformacao_state (key, value) VALUES ('state', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
-      [stateString]
+      "INSERT INTO config_v2 (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value",
+      [key, JSON.stringify(value)]
     );
     res.json({ success: true });
   } catch (err) {
-    console.error('Erro ao salvar no Neon:', err);
+    console.error('Erro ao salvar config v2:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -90,14 +94,21 @@ app.post('/api/save', async (req, res) => {
 // NOVAS ROTAS: Desligar Sistema e Backup (Adaptadas para Nuvem)
 // ----------------------------------------------------------------------
 
-// Rota para baixar o arquivo de backup (Agora baixa um JSON do estado)
+// Rota para baixar o backup completo (monta JSON a partir das tabelas V2)
 app.get('/api/backup/download', async (req, res) => {
   try {
-    const result = await pool.query("SELECT value FROM transformacao_state WHERE key = 'state'");
-    const data = result.rows.length > 0 ? result.rows[0].value : '{}';
+    const [cli, srv, ag, fin, cfg] = await Promise.all([
+      pool.query("SELECT c.*, json_agg(json_build_object('id',p.id,'nome',p.nome,'raca',p.raca,'porte',p.porte,'metadata',p.metadata)) as pets FROM clientes c LEFT JOIN pets p ON c.id=p.cliente_id AND p.deleted_at IS NULL WHERE c.deleted_at IS NULL GROUP BY c.id"),
+      pool.query("SELECT * FROM servicos WHERE deleted_at IS NULL"),
+      pool.query("SELECT a.*, p.cliente_id FROM agendamentos a LEFT JOIN pets p ON a.pet_id=p.id WHERE a.deleted_at IS NULL"),
+      pool.query("SELECT * FROM financeiro WHERE deleted_at IS NULL"),
+      pool.query("SELECT key, value FROM config_v2")
+    ]);
+    const config = {}; cfg.rows.forEach(r => { config[r.key] = r.value; });
+    const backup = { clientes: cli.rows, servicos: srv.rows, agendamentos: ag.rows, financeiro: fin.rows, configuracoes: config.configuracoes || {}, recordes: config.recordes || {} };
+    const data = JSON.stringify(backup, null, 2);
     const dateStr = new Date().toISOString().split('T')[0].split('-').reverse().join('_');
     const fileName = `transformacao_backup_${dateStr}.json`;
-    
     res.setHeader('Content-disposition', `attachment; filename=${fileName}`);
     res.setHeader('Content-type', 'application/json');
     res.send(data);
@@ -115,8 +126,16 @@ app.post('/api/backup/telegram', async (req, res) => {
   if (!botToken || !chatId) return res.status(400).json({ error: 'Bot Token e Chat ID são obrigatórios.' });
 
   try {
-    const result = await pool.query("SELECT value FROM transformacao_state WHERE key = 'state'");
-    const data = result.rows.length > 0 ? result.rows[0].value : '{}';
+    const [cli, srv, ag, fin, cfg] = await Promise.all([
+      pool.query("SELECT c.*, json_agg(json_build_object('id',p.id,'nome',p.nome,'raca',p.raca,'porte',p.porte,'metadata',p.metadata)) as pets FROM clientes c LEFT JOIN pets p ON c.id=p.cliente_id AND p.deleted_at IS NULL WHERE c.deleted_at IS NULL GROUP BY c.id"),
+      pool.query("SELECT * FROM servicos WHERE deleted_at IS NULL"),
+      pool.query("SELECT a.*, p.cliente_id FROM agendamentos a LEFT JOIN pets p ON a.pet_id=p.id WHERE a.deleted_at IS NULL"),
+      pool.query("SELECT * FROM financeiro WHERE deleted_at IS NULL"),
+      pool.query("SELECT key, value FROM config_v2")
+    ]);
+    const cfgMap = {}; cfg.rows.forEach(r => { cfgMap[r.key] = r.value; });
+    const backup = { clientes: cli.rows, servicos: srv.rows, agendamentos: ag.rows, financeiro: fin.rows, configuracoes: cfgMap.configuracoes || {}, recordes: cfgMap.recordes || {} };
+    const data = JSON.stringify(backup, null, 2);
     
     const form = new FormData();
     form.append('chat_id', chatId);

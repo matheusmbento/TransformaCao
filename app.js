@@ -45,82 +45,25 @@ function defaultDB() {
 
 async function loadDB() {
   try {
-    const res = await fetch('/api/db?t=' + new Date().getTime());
-    const dbData = await res.json();
-    if (!dbData) return defaultDB();
+    const finalState = defaultDB();
     
-    const finalState = Object.assign(defaultDB(), dbData);
-    
-    // Sanitização: Garante que todos os lançamentos financeiros antigos tenham ID
-    let alterado = false;
-    if (finalState.financeiro && Array.isArray(finalState.financeiro)) {
-      finalState.financeiro.forEach(f => {
-        if (!f.id) {
-          f.id = uid();
-          alterado = true;
-        }
-      });
-    }
-
-    if (finalState.servicos && Array.isArray(finalState.servicos)) {
-      finalState.servicos.forEach(s => {
-        if (!s.duracao) {
-          s.duracao = 60; // Fallback padrão
-          alterado = true;
-        }
-      });
-    }
-
-    // Sanitização: Migra créditos genéricos legados para o novo sistema de pacote
-    if (finalState.clientes && Array.isArray(finalState.clientes)) {
-      finalState.clientes.forEach(c => {
-        // Se tinha créditos antigos mas não tem pacote novo, limpa
-        if (c.creditos !== undefined && !c.pacote) {
-          delete c.creditos;
-          alterado = true;
-        }
-      });
-    }
-
-    // Sanitização: Garante que o objeto recordes exista (para bases antigas)
-    if (!finalState.recordes || typeof finalState.recordes !== 'object') {
-      finalState.recordes = defaultDB().recordes;
-      alterado = true;
-    } else {
-      const dr = defaultDB().recordes;
-      // garante campos individuais que podem faltar em versões anteriores
-      if (!finalState.recordes.melhorDia)    finalState.recordes.melhorDia    = dr.melhorDia;
-      if (!finalState.recordes.melhorSemana) finalState.recordes.melhorSemana = dr.melhorSemana;
-      if (!finalState.recordes.melhorMes)    finalState.recordes.melhorMes    = dr.melhorMes;
-      if (!Array.isArray(finalState.recordes.celebracoesPendentes))
-        finalState.recordes.celebracoesPendentes = [];
-    }
-    
-    // Se sanitizou dados antigos, grava as correções de volta no banco SQLite
-    if (alterado) {
-      state = finalState;
-      saveDB();
-    }
-    
-    // --- STRANGLER FIG: Substituir serviços legados pela nova API V2 ---
+    // ── Serviços V2 ──
     try {
-      const resSrv = await fetch('/api/v2/servicos?t=' + new Date().getTime());
+      const resSrv = await fetch('/api/v2/servicos?t=' + Date.now());
       if (resSrv.ok) {
         const servicosV2 = await resSrv.json();
         if (servicosV2 && servicosV2.length > 0) {
           finalState.servicos = servicosV2;
         }
       }
-    } catch (err) {
-      console.error('Erro ao carregar servicos V2:', err);
-    }
+    } catch (err) { console.error('Erro ao carregar servicos V2:', err); }
     
+    // ── Clientes V2 ──
     try {
-      const resCli = await fetch('/api/v2/clientes?t=' + new Date().getTime());
+      const resCli = await fetch('/api/v2/clientes?t=' + Date.now());
       if (resCli.ok) {
         const clientesV2 = await resCli.json();
         if (clientesV2) {
-          // Mapeia para o formato legado para não quebrar o UI atual (Strangler Fig Bridge)
           finalState.clientes = clientesV2.map(c => {
             const firstPet = (c.pets && c.pets.length > 0 && c.pets[0].id) ? c.pets[0] : null;
             const petMeta = firstPet ? (firstPet.metadata || {}) : {};
@@ -141,12 +84,11 @@ async function loadDB() {
           });
         }
       }
-    } catch (err) {
-      console.error('Erro ao carregar clientes V2:', err);
-    }
+    } catch (err) { console.error('Erro ao carregar clientes V2:', err); }
     
+    // ── Agendamentos V2 ──
     try {
-      const resAg = await fetch('/api/v2/agendamentos?t=' + new Date().getTime());
+      const resAg = await fetch('/api/v2/agendamentos?t=' + Date.now());
       if (resAg.ok) {
         const agendasV2 = await resAg.json();
         if (agendasV2) {
@@ -165,12 +107,11 @@ async function loadDB() {
           }));
         }
       }
-    } catch (err) {
-      console.error('Erro ao carregar agendamentos V2:', err);
-    }
+    } catch (err) { console.error('Erro ao carregar agendamentos V2:', err); }
     
+    // ── Financeiro V2 ──
     try {
-      const resFin = await fetch('/api/v2/financeiro?t=' + new Date().getTime());
+      const resFin = await fetch('/api/v2/financeiro?t=' + Date.now());
       if (resFin.ok) {
         const finV2 = await resFin.json();
         if (finV2) {
@@ -185,29 +126,40 @@ async function loadDB() {
           }));
         }
       }
-    } catch (err) {
-      console.error('Erro ao carregar financeiro V2:', err);
-    }
-    // --------------------------------------------------------------------
+    } catch (err) { console.error('Erro ao carregar financeiro V2:', err); }
+    
+    // ── Configurações e Recordes V2 ──
+    try {
+      const resCfg = await fetch('/api/v2/config?t=' + Date.now());
+      if (resCfg.ok) {
+        const configV2 = await resCfg.json();
+        if (configV2.configuracoes) {
+          finalState.configuracoes = { ...finalState.configuracoes, ...configV2.configuracoes };
+        }
+        if (configV2.recordes) {
+          finalState.recordes = { ...finalState.recordes, ...configV2.recordes };
+        }
+      }
+    } catch (err) { console.error('Erro ao carregar config V2:', err); }
 
     return finalState;
   } catch (e) {
-    console.error('Erro ao ler do SQLite:', e);
+    console.error('Erro ao carregar dados:', e);
     return defaultDB();
   }
 }
 
-async function saveDB() {
+// ── Funções auxiliares para salvar config/recordes no V2 ──
+async function saveConfigV2(key, value) {
   try {
-    await fetch('/api/save', {
-      method: 'POST',
+    await fetch('/api/v2/config', {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(state)
+      body: JSON.stringify({ key, value })
     });
-  } catch (e) {
-    console.error('Erro ao salvar no SQLite:', e);
-  }
+  } catch (e) { console.error('Erro ao salvar config V2:', e); }
 }
+
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -1632,7 +1584,6 @@ window.salvarAgendamento = async function() {
   
   // DUAL WRITE: Salva no Legado
   state.agendamentos.push(ag);
-  saveDB();
 
   // DUAL WRITE: Salva no Postgres (V2)
   try {
@@ -1737,7 +1688,6 @@ window.efetivarConclusao = async function(id, usarCredito) {
     }
   }
 
-  saveDB();
 
   // DUAL WRITE: Postgres
   try {
@@ -1889,7 +1839,6 @@ window.confirmarTaxiDog = function(agendId) {
     });
   } catch(e) {}
 
-  saveDB();
   document.getElementById('modal-overlay').classList.remove('open');
   showToast(`Taxi Dog de ${fmtMoney(valor)} registrado! 🚗💰`, 'success');
   renderPage(currentPage);
@@ -1903,7 +1852,6 @@ window.deleteAgendamento = async function(id) {
     state.agendamentos = state.agendamentos.filter(a => a.id !== id);
     // CASCADE LOCAL: remove lançamentos financeiros vinculados a este agendamento
     state.financeiro = state.financeiro.filter(f => f.agendamento_id !== id);
-    saveDB();
     showToast('Agendamento removido', 'info');
     renderPage(currentPage);
   } catch (err) {
@@ -1988,7 +1936,6 @@ window.atualizarAgendamento = async function(id) {
     console.error('Erro ao atualizar agendamento no Postgres:', e);
   }
 
-  saveDB();
   document.getElementById('modal-overlay').classList.remove('open');
   showToast('Agendamento atualizado!', 'success');
   renderPage(currentPage);
@@ -2782,7 +2729,6 @@ window.confirmarPacote = function(id) {
     })
   }).catch(e => console.error('Dual Write cliente (pacote):', e));
 
-  saveDB();
   showToast(`Pacote "${nome}" criado com sucesso! 🎉`, 'success');
   openClienteDetalhe(id);
   renderPage(currentPage);
@@ -2794,7 +2740,18 @@ window.encerrarPacote = function(id) {
   const c = state.clientes.find(c => c.id === id);
   if (c) {
     delete c.pacote;
-    saveDB();
+    // V2 Update
+    try {
+      fetch(`/api/v2/clientes/${c.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: c.nome, telefone: c.telefone, observacoes: c.obs,
+          metadata: { ...c, id: undefined, nome: undefined, telefone: undefined, obs: undefined, pet_id: undefined, pet: undefined }
+        })
+      });
+    } catch(e) { console.error(e); }
+    
     showToast('Pacote encerrado', 'info');
     openClienteDetalhe(id);
     renderPage(currentPage);
@@ -2825,7 +2782,6 @@ window.deleteCliente = async function(id) {
     if (!res.ok) throw new Error('Falha ao excluir cliente');
     state.clientes = state.clientes.filter(c => c.id !== id);
     state.agendamentos = state.agendamentos.filter(a => a.clienteId !== id);
-    saveDB();
     document.getElementById('modal-overlay').classList.remove('open');
     showToast('Cliente removido', 'info');
     renderPage(currentPage);
@@ -3251,7 +3207,6 @@ window.salvarServico = async function(editId) {
       state.servicos.push({ ...dados });
       showToast('Serviço criado!', 'success');
     }
-    saveDB();
     document.getElementById('modal-overlay').classList.remove('open');
     renderPage(currentPage);
   } catch (err) {
@@ -3266,7 +3221,6 @@ window.deleteServico = async function(id) {
     const res = await fetch(`/api/v2/servicos/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error('Falha ao excluir serviço');
     state.servicos = state.servicos.filter(s => s.id !== id);
-    saveDB();
     showToast('Serviço removido', 'info');
     renderPage(currentPage);
   } catch (err) {
@@ -3732,7 +3686,6 @@ window.salvarFinanceiro = async function() {
     console.error('Erro ao salvar financeiro no Postgres:', e);
   }
 
-  saveDB();
   document.getElementById('modal-overlay').classList.remove('open');
   showToast('Lançamento salvo!', 'success');
   renderPage(currentPage);
@@ -3744,7 +3697,6 @@ window.deleteFinanceiro = async function(id) {
     const res = await fetch(`/api/v2/financeiro/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error('Falha ao excluir financeiro');
     state.financeiro = state.financeiro.filter(f => f.id !== id);
-    saveDB();
     showToast('Lançamento removido', 'info');
     renderPage(currentPage);
   } catch (err) {
@@ -3828,7 +3780,6 @@ function seedDemoData() {
   ];
   costs.forEach(c => state.financeiro.push({ id: uid(), tipo: 'custo', ...c }));
 
-  saveDB();
 }
 
 // ─── CONFIGURAÇÕES E BACKUP ─────────────────────────────────────
@@ -3969,7 +3920,7 @@ window.salvarConfig = function() {
   if (confirmar) state.configuracoes.mensagens.confirmar = confirmar;
   if (pronto) state.configuracoes.mensagens.pronto = pronto;
   
-  saveDB();
+  saveConfigV2('configuracoes', state.configuracoes);
   showToast('Configurações salvas! ✅', 'success');
   document.getElementById('modal-overlay').classList.remove('open');
 };
@@ -3993,7 +3944,7 @@ window.enviarBackupTelegram = function() {
   if (!state.configuracoes) state.configuracoes = {};
   state.configuracoes.telegramToken = token;
   state.configuracoes.telegramChatId = chatId;
-  saveDB();
+  saveConfigV2('configuracoes', state.configuracoes);
   
   showToast('Enviando backup para o Telegram...', 'info');
 
@@ -4265,7 +4216,7 @@ function checkDayRecord(dataAgendamento) {
   if (!bateuRecorde) return;
 
   r.melhorDia = { data: dataAgendamento, qtd, receita };
-  saveDB();
+  saveConfigV2('recordes', state.recordes);
 
   showCelebration([{ tipo: 'dia', dados: { qtd, receita }, nivel: 'bronze' }]);
 }
@@ -4343,7 +4294,7 @@ function checkPeriodicRecords() {
   }
 
   if (celebrations.length > 0) {
-    saveDB();
+    saveConfigV2('recordes', state.recordes);
     showCelebration(celebrations);
   }
 }
@@ -4394,7 +4345,7 @@ function renderHallFama() {
 window.resetarRecordes = function() {
   if (!confirm('Isso vai zerar todos os recordes de Hall da Fama. Clientes e agendamentos não serão afetados. Continuar?')) return;
   state.recordes = defaultDB().recordes;
-  saveDB();
+  saveConfigV2('recordes', state.recordes);
   document.getElementById('modal-overlay').classList.remove('open');
   showToast('Recordes zerados com sucesso! ✅', 'success');
 };
