@@ -1,9 +1,9 @@
-const CACHE_NAME = 'transformacao-v5';
+const CACHE_NAME = 'transformacao-v6';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/style.css?v=3',
-  '/app.js?v=3',
+  '/style.css?v=5',
+  '/app.js?v=5',
   '/logo.png',
   '/icon-512.png'
 ];
